@@ -1,7 +1,4 @@
 <?php
-ini_set('error_reporting', E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 
 class Log {
     public static function add($data=null,$title=''){
@@ -34,47 +31,25 @@ class Currency{
         $this->filename ='rate_'.$this->currentDate.'.txt';
     }
 
-    public function apiControl($method){
-
-    }
-
 
     public function getApiCurrencyRate()
     {
-        //$result = [];
         $currancy_arrays=[];
-
-        $method = 'latest';
-        try{
-            $apiResult = $this->getApiData($method);
-            if(array_key_exists('error',$apiResult)){
-                return $apiResult ;
-            }else{
-                $currancy_arrays[] =  $apiResult;
-                Log::add($apiResult,"today");
+        $methods[]=$method = date("Y-m-d",strtotime("-1 days"));
+        $methods[] = 'latest';
+        Log::add($methods) ;
+        foreach($methods as $method){
+            try{
+                $apiResult = $this->getApiData($method);
+                if(array_key_exists('error',$apiResult)){
+                    return $apiResult ;
+                }else{
+                    $currancy_arrays[] =  $apiResult;
+                }
+            }catch(Exception $e){
+                return ['status'=>"error",'message'=>$e->getMessage()];
             }
-        }catch(Exception $e){
-            Log::add($e->getCode(),__LINE__);
-            return ['status'=>"error",'message'=>$e->getMessage()];
         }
-
-
-
-        $method = date("Y-m-d",strtotime("-1 days"));
-        try{
-            $apiResult = $this->getApiData($method);
-            if(array_key_exists('error',$currancy_arrays)){
-                return $apiResult;
-            }else{
-                $currancy_arrays[] = $apiResult;
-                Log::add($apiResult,"yesyterday");
-            }
-        }catch(Exception $e){
-            Log::add($e->getCode(),__LINE__);
-            return ['status'=>"error",'message'=>$e->getMessage()];
-        }
-
-
         return $currancy_arrays;
     }
 
@@ -111,11 +86,8 @@ class Currency{
             $data= file_get_contents($this->filename);
             if($data) {
                 $arrayFromFile = json_decode($data,true);
-                Log::add(null,__LINE__);
             }
-            Log::add(null,__LINE__);
         }
-        Log::add(null,__LINE__);
         return $arrayFromFile;
     }
 
@@ -126,12 +98,8 @@ class Currency{
 
         foreach($arrayFromApi as $key => $currancy_array){
             $arrayToFile[$currancy_array['base']][$currancy_array['date']]['rates'] = $currancy_array['rates'];
-            Log::add('debug',__LINE__);
         };
-
-        Log::add('debug',__LINE__);
         $filePutResult = file_put_contents($this->filename, json_encode($arrayToFile));
-        Log::add('debug',__LINE__);
 
         return $arrayToFile;
 
@@ -144,12 +112,8 @@ class Process{
     public function start(){
         if($_POST){
             if((array_key_exists('baseCurrency',$_POST)) && (!empty($_POST))){
-                Log::add($_POST['baseCurrency'],__LINE__);
                 $Currency= new Currency($_POST['baseCurrency']);
-
                 $arrayFromFile = $Currency->getFileCurrencyRate();
-                Log::add('debug',__LINE__);
-
                 if(!array_key_exists($Currency->baseCurrency, $arrayFromFile)){
                     $arrayFromApi = $Currency->getApiCurrencyRate();
                     if (array_key_exists('error',$arrayFromApi)){
@@ -160,7 +124,7 @@ class Process{
                         $arrayToFront['status']='success';
                         $arrayToFront['message']=$arrayToFile[$Currency->baseCurrency];
 
-                        Log::add('$result',__LINE__);
+
                     }
                 }else{
                     $arrayToFront['status']='success';
@@ -182,6 +146,10 @@ class Process{
     }
 
     public function jsonResponse ($status,$data=null){
+        ob_start();
+        ob_end_clean();
+        Header('Cache-Control: no-cache');
+        Header('Pragma: no-cache');
         echo json_encode(array('status'=>$status,'data'=>$data));
     }
 }

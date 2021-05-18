@@ -13,9 +13,10 @@
 
     <select name="currency_selector" id="currency_selector">
         <option selected value="USD">USD</option>
-        <option value="PLN">PLN</option>
         <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
+        <option value="PLN">PLN</option>
+       
+
     </select>
 
 
@@ -35,6 +36,9 @@
 </div>
 
 <script>
+    $(document).ready(function(){
+        getExchangeStatus($('#currency_selector').val());
+    })
 
     $( "#currency_selector" ).change(function() {
         //alert($('#currency_selector').val());
@@ -55,57 +59,55 @@
                  console.log(answer);
                 if(answer.status =='error'){
                     alert(result);
+                    $("#tableBody").html('');
                 }else{
                     var arrayToRender=[];
+                    var yesterday = returnYYYYMMDD(-1);
                     console.log(answer.data);
+                    console.log(yesterday);
                     for(rateDate in answer.data){
                        // console.log("Ключ: " + rateDate + " значение: " + answer.data[rateDate]['rates']);
                         for(key2 in answer.data[rateDate]['rates']){
                             //console.log("Ключ: " + key2 + " значение: " + answer.data[rateDate]['rates'][key2]);
-                            render (rateDate,key2,answer.data[rateDate]['rates'][key2]);
+                            render (rateDate,key2,answer.data[rateDate]['rates'][key2],yesterday);
                         }
-                       /* dateCollumnToRender[]=key;
-                        render_column(key,answer.data[key]['rates']);*/
                     }
+
                 }
                 //render(answer.data);
         });
     }
 
-    function render(rateDate, valuta, rate){
+    function render(rateDate, valuta, rate,yesterday){
         var tableResult,
-            tableRow,
-            rateYesterday;
-        //console.log(rateDate+" "+ valuta+" " +rate);
-       if($("#"+valuta).length){
-           var index;
-           index="#"+valuta+"_"+rateDate;
-           rateYesyerday = ($(index).closest('tr:nth-child(2)').text());
-           console.log( index+" "+rateYesterday);
+            tableRow;
 
-           if ($("#"+valuta+"_"+rateDate).length){
-               $("#"+valuta+"_"+rateDate).html(rate)
-
-               console.log("значение ячейки " +rateYesterday);
-              /* if(rateYesterday < rate($(index)).text()){
-                   $(this).css("color","green");alert ("green");
-               }else if(rateYesterday > rate(index).text()){
-                   $(this).css("color","red");alert ("red");
-               }*/
-
-           }else{
-               $("#"+valuta).append("<td id="+valuta+"_"+rateDate+" >"+rate+"</td>");
-              04i
-           }
-
-       }else{
+        if(!$("#"+valuta).length){
            tableRow = " <tr id="+valuta+">" +
-               "<td id="+valuta+"_name >"+valuta+"</td>"+
-               "<td id="+valuta+"_"+rateDate+" >"+rate+"</td>"+
-               "</tr>";
+                      "<td id="+valuta+"_name >"+valuta+"</td>"+
+                      "</tr>";
            $("#tableBody").append(tableRow);
+        }
+        if ($("#"+valuta+"_"+rateDate).length){
+            $("#"+valuta+"_"+rateDate).html(rate)
 
-       }
+        }else{
+            $("#"+valuta).append("<td id="+valuta+"_"+rateDate+" >"+rate+"</td>");
+            console.log($('#'+valuta+"_"+rateDate).text()+' '+ $('#'+valuta+"_"+yesterday).text());
+            if(parseFloat($('#'+valuta+"_"+rateDate).text()) > parseFloat($('#'+valuta+"_"+yesterday).text())){
+                $('#'+valuta+"_"+rateDate).css("color","green");
+            }else if (parseFloat($('#'+valuta+"_"+rateDate).text()) < parseFloat($('#'+valuta+"_"+yesterday).text())){
+                $('#'+valuta+"_"+rateDate).css("color","red");
+            }
+
+        }
+    }
+    function returnYYYYMMDD(numFromToday = 0){
+        let d = new Date();
+        d.setDate(d.getDate() + numFromToday);
+        const month = d.getMonth() < 9 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1;
+        const day = d.getDate() < 10 ? '0' + d.getDate() : d.getDate();
+        return `${d.getFullYear()}-${month}-${day}`;
     }
 
 </script>
