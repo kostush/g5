@@ -37,17 +37,19 @@ class Currency{
         $currancy_arrays=[];
         $methods[]=$method = date("Y-m-d",strtotime("-1 days"));
         $methods[] = 'latest';
-        Log::add($methods) ;
         foreach($methods as $method){
             try{
                 $apiResult = $this->getApiData($method);
                 if(array_key_exists('error',$apiResult)){
+                    Log::add([$method,$apiResult],__LINE__);
                     return $apiResult ;
                 }else{
                     $currancy_arrays[] =  $apiResult;
                 }
             }catch(Exception $e){
+                Log::add([$method,$e],__LINE__);
                 return ['status'=>"error",'message'=>$e->getMessage()];
+
             }
         }
         return $currancy_arrays;

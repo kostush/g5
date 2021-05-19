@@ -12,10 +12,10 @@
     <label for="currency">Choose a currency:</label>
 
     <select name="currency_selector" id="currency_selector">
-        <option selected value="USD">USD</option>
-        <option value="EUR">EUR</option>
+        <option value="USD">USD</option>
+        <option selected value="EUR">EUR</option>
         <option value="PLN">PLN</option>
-       
+
 
     </select>
 
@@ -41,7 +41,6 @@
     })
 
     $( "#currency_selector" ).change(function() {
-        //alert($('#currency_selector').val());
        var baseCurrency = $('#currency_selector').val();
        getExchangeStatus(baseCurrency);
     });
@@ -51,7 +50,6 @@
     }
 
     function getExchangeStatus(baseCurrency){
-       // alert('post');
         $.post('https://skk-studio.com/5g/back.php',
             {'baseCurrency':baseCurrency},
             function(result){
@@ -61,20 +59,14 @@
                     alert(result);
                     $("#tableBody").html('');
                 }else{
-                    var arrayToRender=[];
                     var yesterday = returnYYYYMMDD(-1);
-                    console.log(answer.data);
-                    console.log(yesterday);
                     for(rateDate in answer.data){
-                       // console.log("Ключ: " + rateDate + " значение: " + answer.data[rateDate]['rates']);
                         for(key2 in answer.data[rateDate]['rates']){
-                            //console.log("Ключ: " + key2 + " значение: " + answer.data[rateDate]['rates'][key2]);
                             render (rateDate,key2,answer.data[rateDate]['rates'][key2],yesterday);
                         }
                     }
 
                 }
-                //render(answer.data);
         });
     }
 
